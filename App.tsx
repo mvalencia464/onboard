@@ -11,7 +11,15 @@ import { Sparkles, ShieldCheck } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 
 export default function App() {
-  const [step, setStep] = useState<AppStep>(AppStep.SEARCH);
+  const [step, setStep] = useState<AppStep>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hash = window.location.hash;
+    // Check for explicit admin flag OR presence of access_token/error which implies a login redirect
+    if (params.get('admin') === 'true' || hash.includes('access_token') || hash.includes('error_description')) {
+      return AppStep.ADMIN;
+    }
+    return AppStep.SEARCH;
+  });
   const [businessName, setBusinessName] = useState('');
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);
   const [error, setError] = useState<string | null>(null);
@@ -20,13 +28,15 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log("Initial session check:", session, "Error:", error);
       setSession(session);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state change:", _event, session);
       setSession(session);
     });
 
