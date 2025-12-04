@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ServiceCategory, ServiceItem } from '../types';
-import { Check, Plus, Trash2, Star } from 'lucide-react';
+import { Check, Plus, Trash2, Star, Upload } from 'lucide-react';
+import ImportCategoriesModal from './ImportCategoriesModal';
 
 interface CategorySelectorProps {
   categories: ServiceCategory[];
@@ -8,6 +9,7 @@ interface CategorySelectorProps {
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ categories, onChange }) => {
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const toggleService = (catIndex: number, serviceIndex: number) => {
     const newCats = [...categories];
@@ -62,13 +64,57 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ categories, onChang
     onChange(newCats);
   };
 
+  const handleImport = (importedCategories: ServiceCategory[]) => {
+    const updatedCategories = [...categories];
+
+    importedCategories.forEach(importedCat => {
+      const existingCatIndex = updatedCategories.findIndex(
+        c => c.name.toLowerCase().trim() === importedCat.name.toLowerCase().trim()
+      );
+
+      if (existingCatIndex >= 0) {
+        // Merge services
+        const existingServices = updatedCategories[existingCatIndex].services;
+        importedCat.services.forEach(importedService => {
+           const exists = existingServices.some(
+             s => s.name.toLowerCase().trim() === importedService.name.toLowerCase().trim()
+           );
+           if (!exists) {
+             existingServices.push(importedService);
+           }
+        });
+      } else {
+        // Add new category
+        updatedCategories.push(importedCat);
+      }
+    });
+
+    onChange(updatedCategories);
+  };
+
   return (
     <div className="space-y-8">
-      <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-800 mb-4">
-        <strong>AI Scanned Results:</strong> We found {categories.reduce((acc, c) => acc + c.services.length, 0)} potential services across {categories.length} categories. Please uncheck any that do not apply.
+      <div className="bg-blue-50 border border-blue-100 p-4 rounded-lg text-sm text-blue-800 mb-4 flex justify-between items-center">
+        <span>
+          <strong>AI Scanned Results:</strong> We found {categories.reduce((acc, c) => acc + c.services.length, 0)} potential services across {categories.length} categories.
+        </span>
+        <button
+          onClick={() => setIsImportModalOpen(true)}
+          className="flex items-center gap-2 bg-white border border-blue-200 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors shadow-sm font-medium"
+        >
+          <Upload className="w-4 h-4" />
+          Import Text
+        </button>
       </div>
 
+      <ImportCategoriesModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImport}
+      />
+
       <div className="grid grid-cols-1 gap-6">
+
         {categories.map((category, catIndex) => (
           <div key={catIndex} className={`bg-white rounded-xl border shadow-sm overflow-hidden transition-all ${category.isPrimary ? 'border-brand-orange ring-1 ring-brand-orange shadow-md' : 'border-gray-200'}`}>
             {/* Category Header */}

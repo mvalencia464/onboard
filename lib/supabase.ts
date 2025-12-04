@@ -35,9 +35,22 @@ export async function saveBusiness(data: OnboardingData, status: 'draft' | 'onbo
                 .update(payload)
                 .eq('id', data.id)
                 .select()
-                .single();
+                .maybeSingle();
             
             if (error) throw error;
+
+            if (!result) {
+                console.warn('Update returned no rows (record deleted or permission denied). Creating new record instead.');
+                // Fallback to insert
+                const { data: newResult, error: insertError } = await query
+                    .insert([payload])
+                    .select()
+                    .single();
+                
+                if (insertError) throw insertError;
+                return { data: newResult };
+            }
+
             return { data: result };
         } else {
             // Insert new
