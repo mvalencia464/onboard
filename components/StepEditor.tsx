@@ -307,16 +307,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                     <Globe className="w-4 h-4" />
                     View All on Google Maps
                   </a>
-                  <button
-                    onClick={() => {
-                      const newReview = { id: Date.now().toString(), quote: "", author: "", location: "" };
-                      updateField('testimonials', [...data.testimonials, newReview]);
-                    }}
-                    className="flex items-center gap-2 text-sm font-medium text-brand-orange hover:text-orange-700 px-3 py-2 rounded-lg hover:bg-orange-50 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Manual Review
-                  </button>
+
                 </div>
               </div>
 
@@ -325,61 +316,27 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                 <div className="grid gap-4">
                   {data.testimonials.map((testi, i) => (
                     <div key={i} className="bg-white p-4 rounded-lg border border-gray-200 relative group">
-                      <button
-                        onClick={() => {
-                          const newTestimonials = [...data.testimonials];
-                          newTestimonials.splice(i, 1);
-                          updateField('testimonials', newTestimonials);
-                        }}
-                        className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                        title="Delete Review"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
 
                       <div className="space-y-3">
                         <div>
                           <label className="text-xs font-bold text-gray-400 uppercase">Quote</label>
-                          <textarea
-                            className="w-full p-2 border rounded-md text-sm italic text-gray-600 focus:ring-1 focus:ring-brand-orange focus:border-brand-orange"
-                            rows={3}
-                            value={testi.quote}
-                            onChange={(e) => {
-                              const newTestimonials = [...data.testimonials];
-                              newTestimonials[i].quote = e.target.value;
-                              updateField('testimonials', newTestimonials);
-                            }}
-                            placeholder="Paste review text here..."
-                          />
+                          <div className="w-full p-2 text-sm italic text-gray-600">
+                            {testi.quote}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="text-xs font-bold text-gray-400 uppercase">Author</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 border rounded-md text-xs font-bold text-gray-900"
-                              value={testi.author}
-                              onChange={(e) => {
-                                const newTestimonials = [...data.testimonials];
-                                newTestimonials[i].author = e.target.value;
-                                updateField('testimonials', newTestimonials);
-                              }}
-                              placeholder="Reviewer Name"
-                            />
+                            <div className="w-full p-2 text-xs font-bold text-gray-900">
+                              {testi.author}
+                            </div>
                           </div>
                           <div>
                             <label className="text-xs font-bold text-gray-400 uppercase">Location/Context</label>
-                            <input
-                              type="text"
-                              className="w-full p-2 border rounded-md text-xs text-gray-500"
-                              value={testi.location}
-                              onChange={(e) => {
-                                const newTestimonials = [...data.testimonials];
-                                newTestimonials[i].location = e.target.value;
-                                updateField('testimonials', newTestimonials);
-                              }}
-                              placeholder="e.g. Google Review"
-                            />
+                            <div className="w-full p-2 text-xs text-gray-500">
+                              {testi.location}
+                            </div>
                           </div>
                         </div>
                       </div>
