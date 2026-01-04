@@ -27,6 +27,10 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState('');
   const [session, setSession] = useState<Session | null>(null);
 
+  // Manual Entry State
+  const [isManualEntry, setIsManualEntry] = useState(false);
+  const [manualName, setManualName] = useState('');
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log("Initial session check:", session, "Error:", error);
@@ -81,6 +85,17 @@ export default function App() {
       setError("Failed to analyze business data. Please try again.");
       setStep(AppStep.SEARCH);
     }
+  };
+
+  const handleManualSubmit = () => {
+    if (!manualName.trim()) return;
+
+    setBusinessName(manualName);
+    setData({
+      ...INITIAL_DATA,
+      businessName: manualName
+    });
+    setStep(AppStep.EDITOR);
   };
 
   const handleSaveDraft = async () => {
@@ -176,16 +191,61 @@ export default function App() {
               </p>
             </div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Find Business Profile</label>
-                  {/* Replaced manual inputs with Google Places Autocomplete */}
-                  <PlaceSearch onPlaceSelect={handlePlaceSelect} />
-                </div>
+            <div className="bg-white p-8 rounded-2xl shadow-2xl border border-gray-100 transition-all duration-300">
+              {!isManualEntry ? (
+                // Google Places Search View
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Find Business Profile</label>
+                    <PlaceSearch onPlaceSelect={handlePlaceSelect} />
+                  </div>
 
-                {error && <p className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
-              </div>
+                  {error && <p className="text-red-600 text-sm text-center bg-red-50 p-2 rounded">{error}</p>}
+
+                  <div className="pt-4 text-center">
+                    <button
+                      onClick={() => setIsManualEntry(true)}
+                      className="text-sm text-gray-500 hover:text-brand-orange underline transition-colors"
+                    >
+                      Don't have a Google Business Profile? Click here
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Manual Entry View
+                <div className="space-y-6 animate-fade-in">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Business Name</label>
+                    <input
+                      type="text"
+                      value={manualName}
+                      onChange={(e) => setManualName(e.target.value)}
+                      placeholder="Enter business name..."
+                      className="block w-full rounded-xl border-gray-300 px-4 py-3 shadow-sm focus:border-brand-orange focus:ring-brand-orange text-lg bg-gray-50"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleManualSubmit();
+                      }}
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={handleManualSubmit}
+                      disabled={!manualName.trim()}
+                      className="w-full py-3 bg-brand-orange text-white rounded-xl shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-brand-orange focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all font-medium"
+                    >
+                      Start Manual Onboarding
+                    </button>
+                    <button
+                      onClick={() => setIsManualEntry(false)}
+                      className="w-full py-2 text-gray-500 hover:text-gray-700 text-sm transition-colors"
+                    >
+                      Back to Search
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="mt-8 pt-6 border-t border-gray-100 text-center">
                 <p className="text-xs text-gray-400 uppercase tracking-widest">Powered by Gemini 2.5 Flash & Google Maps</p>
