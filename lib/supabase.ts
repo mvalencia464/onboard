@@ -124,3 +124,27 @@ export async function uploadLogo(file: File) {
 
     return { url: data.publicUrl };
 }
+
+export async function uploadProjectFile(file: File) {
+    if (!supabaseUrl || !supabaseAnonKey) return { error: 'No credentials' };
+
+    const fileExt = file.name.split('.').pop();
+    // Create a folder structure based on date to keep it somewhat organized
+    const datePrefix = new Date().toISOString().split('T')[0];
+    const fileName = `${datePrefix}/${Math.random().toString(36).substring(2)}_${file.name.replace(/\s+/g, '_')}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from('project-files')
+        .upload(fileName, file);
+
+    if (uploadError) {
+        console.error('Error uploading project file:', uploadError);
+        return { error: uploadError };
+    }
+
+    const { data } = supabase.storage
+        .from('project-files')
+        .getPublicUrl(fileName);
+
+    return { url: data.publicUrl };
+}

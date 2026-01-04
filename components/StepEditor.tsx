@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../types';
-import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2, Upload } from 'lucide-react';
+import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2, Upload, Image as ImageIcon, CheckCircle, Loader2 } from 'lucide-react';
 import CategorySelector from './CategorySelector';
-import { uploadLogo } from '../lib/supabase';
+import { uploadLogo, uploadProjectFile } from '../lib/supabase';
 
 interface StepEditorProps {
   data: OnboardingData;
@@ -16,6 +16,7 @@ type Tab = 'info' | 'branding' | 'seo' | 'services' | 'portfolio' | 'social' | '
 const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onSaveDraft }) => {
   const [activeTab, setActiveTab] = useState<Tab>('info');
   const [isUploading, setIsUploading] = useState(false);
+  const [projectUploadProgress, setProjectUploadProgress] = useState<{ total: number; current: number } | null>(null);
 
   const updateField = (key: keyof OnboardingData, value: any) => {
     onChange({ ...data, [key]: value });
@@ -39,6 +40,37 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
     } else if (url) {
       updateField('logoUrl', url);
     }
+  };
+
+  const handleProjectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const files = Array.from(e.target.files);
+    setProjectUploadProgress({ total: files.length, current: 0 });
+    
+    const newUrls: string[] = [];
+    let completed = 0;
+
+    // Process files in batches of 3 to avoid overwhelming browser/network
+    const batchSize = 3;
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize);
+      await Promise.all(batch.map(async (file) => {
+        const { url, error } = await uploadProjectFile(file);
+        if (url) {
+          newUrls.push(url);
+        } else {
+          console.error("Failed to upload:", file.name, error);
+        }
+        completed++;
+        setProjectUploadProgress({ total: files.length, current: completed });
+      }));
+    }
+
+    if (newUrls.length > 0) {
+      updateField('galleryUrls', [...(data.galleryUrls || []), ...newUrls]);
+    }
+    setProjectUploadProgress(null);
   };
 
   const TabButton = ({ id, icon: Icon, label }: { id: Tab; icon: any; label: string }) => (
@@ -332,19 +364,73 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
             <div className="space-y-6 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Portfolio Projects</h2>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                 <div className="bg-blue-100 p-2 rounded-full text-blue-600">
-                    <Upload className="w-5 h-5" />
-                 </div>
-                 <div>
-                    <h3 className="font-bold text-blue-900 text-sm">Photo Submission Instructions</h3>
-                    <p className="text-sm text-blue-800 mt-1">
-                      Please email <strong>25-60 of your best photos</strong> to <a href="mailto:hello@stokeleads.com" className="underline">hello@stokeleads.com</a>.
+              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-brand-orange" />
+                      Project Gallery
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Upload <strong>25-60 of your best photos</strong>. Include team shots and finished projects.
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Include a nice picture of yourself and/or your team!
-                    </p>
-                 </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-bold text-gray-900">{data.galleryUrls?.length || 0}</span>
+                    <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Uploaded</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className={`relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer ${projectUploadProgress ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      {projectUploadProgress ? (
+                        <>
+                          <Loader2 className="w-8 h-8 text-brand-orange animate-spin mb-2" />
+                          <p className="text-sm text-gray-600">Uploading {projectUploadProgress.current} / {projectUploadProgress.total}...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-500"><span className="font-semibold text-brand-orange">Click to upload</span> or drag and drop</p>
+                          <p className="text-xs text-gray-400 mt-1">Select multiple files (JPG, PNG)</p>
+                        </>
+                      )}
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handleProjectUpload} 
+                      disabled={!!projectUploadProgress}
+                    />
+                  </label>
+
+                  {data.galleryUrls && data.galleryUrls.length > 0 && (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                      {data.galleryUrls.slice(0, 16).map((url, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-md overflow-hidden bg-gray-100 group">
+                          <img src={url} alt="Uploaded" className="w-full h-full object-cover" />
+                          <button
+                            onClick={() => {
+                              const newUrls = data.galleryUrls.filter((_, i) => i !== idx);
+                              updateField('galleryUrls', newUrls);
+                            }}
+                            className="absolute top-1 right-1 p-1 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                      {data.galleryUrls.length > 16 && (
+                        <div className="aspect-square rounded-md bg-gray-100 flex items-center justify-center text-xs text-gray-500 font-medium border border-gray-200">
+                          +{data.galleryUrls.length - 16} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-6">

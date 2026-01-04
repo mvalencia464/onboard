@@ -76,6 +76,7 @@ export interface OnboardingData {
 
   // Section 6: Portfolio
   projects: Project[];
+  galleryUrls: string[]; // Added: Bulk photo storage
 
   // Section 7: Social Proof
   testimonials: Testimonial[];
@@ -127,6 +128,7 @@ export const INITIAL_DATA: OnboardingData = {
   railingType: '',
   foundationType: '',
   projects: [],
+  galleryUrls: [],
   testimonials: [],
   processSteps: ['Consult & Design', 'Precision Build', 'Lifetime Enjoyment'],
   termsAccepted: false,
