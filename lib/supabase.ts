@@ -99,3 +99,28 @@ export async function getBusiness(id: number) {
     }
     return { data };
 }
+
+export async function uploadLogo(file: File) {
+    if (!supabaseUrl || !supabaseAnonKey) return { error: 'No credentials' };
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Upload the file
+    const { error: uploadError } = await supabase.storage
+        .from('logos')
+        .upload(filePath, file);
+
+    if (uploadError) {
+        console.error('Error uploading logo:', uploadError);
+        return { error: uploadError };
+    }
+
+    // Get the public URL
+    const { data } = supabase.storage
+        .from('logos')
+        .getPublicUrl(filePath);
+
+    return { url: data.publicUrl };
+}

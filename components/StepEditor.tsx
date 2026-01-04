@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../types';
-import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2 } from 'lucide-react';
+import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2, Upload } from 'lucide-react';
 import CategorySelector from './CategorySelector';
+import { uploadLogo } from '../lib/supabase';
 
 interface StepEditorProps {
   data: OnboardingData;
@@ -14,6 +15,7 @@ type Tab = 'info' | 'branding' | 'seo' | 'services' | 'portfolio' | 'social' | '
 
 const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onSaveDraft }) => {
   const [activeTab, setActiveTab] = useState<Tab>('info');
+  const [isUploading, setIsUploading] = useState(false);
 
   const updateField = (key: keyof OnboardingData, value: any) => {
     onChange({ ...data, [key]: value });
@@ -24,6 +26,19 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
       ...data,
       socials: { ...data.socials, [key]: value }
     });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setIsUploading(true);
+    const file = e.target.files[0];
+    const { url, error } = await uploadLogo(file);
+    setIsUploading(false);
+    if (error) {
+      alert('Failed to upload logo: ' + (error.message || error));
+    } else if (url) {
+      updateField('logoUrl', url);
+    }
   };
 
   const TabButton = ({ id, icon: Icon, label }: { id: Tab; icon: any; label: string }) => (
@@ -100,6 +115,16 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                     value={data.businessName} onChange={(e) => updateField('businessName', e.target.value)} />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Owner Full Name</label>
+                  <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    value={data.ownerName} onChange={(e) => updateField('ownerName', e.target.value)} placeholder="e.g. Maurice" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Tax ID / EIN</label>
+                  <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    value={data.taxId} onChange={(e) => updateField('taxId', e.target.value)} placeholder="Optional" />
+                </div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Tagline / Slogan</label>
                   <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
                     value={data.tagline} onChange={(e) => updateField('tagline', e.target.value)} />
@@ -119,6 +144,11 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                   <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
                     value={data.address} onChange={(e) => updateField('address', e.target.value)} />
                 </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Shipping Address (No P.O. Boxes)</label>
+                  <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    value={data.shippingAddress} onChange={(e) => updateField('shippingAddress', e.target.value)} placeholder="For business cards delivery" />
+                </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Operating Hours</label>
                   <input type="text" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
@@ -134,6 +164,29 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                   <input type="url" className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
                     value={data.websiteUrl} onChange={(e) => updateField('websiteUrl', e.target.value)} placeholder="https://..." />
                 </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Discounts for Maintenance/Remarketing</label>
+                  <textarea rows={2} className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    value={data.discounts} onChange={(e) => updateField('discounts', e.target.value)} placeholder="e.g. $500 off your next roof..." />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-sm font-medium text-gray-700">Business Highlights (Special Features)</label>
+                  <textarea rows={2} className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-brand-orange focus:border-transparent"
+                    value={data.highlights} onChange={(e) => updateField('highlights', e.target.value)} placeholder="e.g. Veteran Owned, 10+ Years in Business, Fully Insured..." />
+                </div>
+                <div className="md:col-span-2 pt-4">
+                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={data.termsAccepted}
+                      onChange={(e) => updateField('termsAccepted', e.target.checked)}
+                      className="w-5 h-5 text-brand-orange rounded border-gray-300 focus:ring-brand-orange"
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      I agree to the Terms and Conditions
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
           )}
@@ -142,6 +195,54 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
             <div className="space-y-6 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Branding & Design</h2>
               <div className="space-y-4">
+                <div className="bg-white p-4 border border-gray-200 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700">Company Logo</label>
+                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={data.needsLogo}
+                        onChange={(e) => updateField('needsLogo', e.target.checked)}
+                        className="rounded text-brand-orange focus:ring-brand-orange"
+                      />
+                      Need us to design one?
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    {data.logoUrl ? (
+                      <div className="relative w-20 h-20 bg-gray-50 border rounded-lg overflow-hidden flex items-center justify-center">
+                        <img src={data.logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                        <button
+                          onClick={() => updateField('logoUrl', null)}
+                          className="absolute top-0 right-0 p-1 bg-red-500 text-white rounded-bl shadow-sm hover:bg-red-600"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400">
+                        <Palette className="w-8 h-8" />
+                      </div>
+                    )}
+
+                    <div className="flex-1">
+                      <label className={`flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer ${isUploading ? 'opacity-50 cursor-wait' : ''}`}>
+                        {isUploading ? (
+                          <span>Uploading...</span>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Logo File
+                          </>
+                        )}
+                        <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} disabled={isUploading} />
+                      </label>
+                      <p className="mt-1 text-xs text-gray-500">PNG, JPG, SVG up to 5MB</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="text-sm font-medium text-gray-700">Primary Brand Color</label>
                   <div className="flex items-center gap-4 mt-2">
@@ -230,6 +331,22 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
           {activeTab === 'portfolio' && (
             <div className="space-y-6 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Portfolio Projects</h2>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                 <div className="bg-blue-100 p-2 rounded-full text-blue-600">
+                    <Upload className="w-5 h-5" />
+                 </div>
+                 <div>
+                    <h3 className="font-bold text-blue-900 text-sm">Photo Submission Instructions</h3>
+                    <p className="text-sm text-blue-800 mt-1">
+                      Please email <strong>25-60 of your best photos</strong> to <a href="mailto:hello@stokeleads.com" className="underline">hello@stokeleads.com</a>.
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Include a nice picture of yourself and/or your team!
+                    </p>
+                 </div>
+              </div>
+
               <div className="grid gap-6">
                 {data.projects.map((project, index) => (
                   <div key={index} className="border border-gray-200 rounded-xl p-4 bg-white shadow-sm">

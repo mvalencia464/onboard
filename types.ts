@@ -39,20 +39,26 @@ export interface OnboardingData {
 
   // Section 1: Identity
   businessName: string;
+  ownerName: string; // Added: Full Name
   googlePlaceId?: string; // Added for referencing the source
   tagline: string;
   primaryPhone: string;
   primaryEmail: string;
-  address: string;
+  taxId: string; // Added: Business Tax ID or EIN
+  address: string; // Business Address
+  shippingAddress: string; // Added: Full Shipping Address
   operatingHours: string;
   licenseNumber: string;
   googleBusinessProfileUrl: string;
   websiteUrl: string;
+  discounts: string; // Added: Discounts for future maintenance
+  highlights: string; // Added: Special highlights/Business features
   
   // Section 2: Branding
   brandColor: string;
   fontPreference: 'Modern' | 'Classic' | 'Handwritten';
   logoUrl: string | null; // Placeholder logic
+  needsLogo: boolean; // Added: Do you need us to make a logo?
   aboutUs: string;
   
   // Section 3: Localization & SEO
@@ -77,6 +83,9 @@ export interface OnboardingData {
   // Section 8: Process
   processSteps: string[];
 
+  // Legal
+  termsAccepted: boolean; // Added: Terms and Conditions Agreement
+
   // Social Links
   socials: {
     instagram: string;
@@ -85,23 +94,30 @@ export interface OnboardingData {
     yelp: string;
     houzz: string;
     bbb: string;
+    tiktok: string; // Added: TikTok
   };
 }
 
 // Initial empty state
 export const INITIAL_DATA: OnboardingData = {
   businessName: '',
+  ownerName: '',
   tagline: '',
   primaryPhone: '',
   primaryEmail: '',
+  taxId: '',
   address: '',
+  shippingAddress: '',
   operatingHours: '',
   licenseNumber: '',
   googleBusinessProfileUrl: '',
   websiteUrl: '',
+  discounts: '',
+  highlights: '',
   brandColor: '#EA580C',
   fontPreference: 'Modern',
   logoUrl: null,
+  needsLogo: false,
   aboutUs: '',
   primaryCity: '',
   neighborhoods: [],
@@ -113,12 +129,14 @@ export const INITIAL_DATA: OnboardingData = {
   projects: [],
   testimonials: [],
   processSteps: ['Consult & Design', 'Precision Build', 'Lifetime Enjoyment'],
+  termsAccepted: false,
   socials: {
     instagram: '',
     facebook: '',
     linkedin: '',
     yelp: '',
     houzz: '',
-    bbb: ''
+    bbb: '',
+    tiktok: ''
   }
 };
