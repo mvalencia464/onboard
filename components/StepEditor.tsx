@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { OnboardingData } from '../types';
-import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2, Upload, Image as ImageIcon, CheckCircle, Loader2 } from 'lucide-react';
+import { Building2, Palette, MapPin, Hammer, Briefcase, MessageSquare, Layers, Save, ArrowRight, Globe, Star, Plus, Trash2, Upload, Image as ImageIcon, CheckCircle, Loader2, Download } from 'lucide-react';
 import CategorySelector from './CategorySelector';
 import { uploadLogo, uploadProjectFile } from '../lib/supabase';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 interface StepEditorProps {
   data: OnboardingData;
@@ -17,6 +19,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
   const [activeTab, setActiveTab] = useState<Tab>('info');
   const [isUploading, setIsUploading] = useState(false);
   const [projectUploadProgress, setProjectUploadProgress] = useState<{ total: number; current: number } | null>(null);
+  const [isZipping, setIsZipping] = useState(false);
 
   const updateField = (key: keyof OnboardingData, value: any) => {
     onChange({ ...data, [key]: value });
@@ -71,6 +74,44 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
       updateField('galleryUrls', [...(data.galleryUrls || []), ...newUrls]);
     }
     setProjectUploadProgress(null);
+  };
+
+  const handleDownloadAll = async () => {
+    if (!data.galleryUrls || data.galleryUrls.length === 0) return;
+    setIsZipping(true);
+
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder("project-photos");
+
+      // Fetch all images
+      const promises = data.galleryUrls.map(async (url, index) => {
+        try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+          const blob = await response.blob();
+          
+          // Try to guess extension from blob or url
+          let ext = url.split('.').pop()?.split('?')[0] || 'jpg';
+          if (ext.length > 4) ext = 'jpg'; // Fallback for weird urls
+          
+          folder?.file(`image-${index + 1}.${ext}`, blob);
+        } catch (err) {
+          console.error("Error zipping file:", url, err);
+        }
+      });
+
+      await Promise.all(promises);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, `${data.businessName.replace(/\s+/g, '_')}_photos.zip`);
+
+    } catch (err) {
+      console.error("Error creating zip:", err);
+      alert("Failed to create zip file. See console for details.");
+    } finally {
+      setIsZipping(false);
+    }
   };
 
   const TabButton = ({ id, icon: Icon, label }: { id: Tab; icon: any; label: string }) => (
@@ -378,6 +419,26 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                   <div className="text-right">
                     <span className="text-2xl font-bold text-gray-900">{data.galleryUrls?.length || 0}</span>
                     <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Uploaded</span>
+                    
+                    {data.galleryUrls && data.galleryUrls.length > 0 && (
+                      <button
+                        onClick={handleDownloadAll}
+                        disabled={isZipping}
+                        className="mt-2 text-xs flex items-center gap-1 text-brand-orange hover:text-orange-700 font-medium ml-auto"
+                      >
+                        {isZipping ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            Zipping...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-3 h-3" />
+                            Download All
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
 
