@@ -98,8 +98,9 @@ export default function App() {
     setStep(AppStep.EDITOR);
   };
 
-  const handleSaveDraft = async () => {
-    const { data: savedData, error } = await saveBusiness(data, 'draft');
+  const handleSaveDraft = async (dataOverride?: OnboardingData) => {
+    const dataToSave = dataOverride || data;
+    const { data: savedData, error } = await saveBusiness(dataToSave, 'draft');
     if (error) {
       console.error("Error saving draft:", error);
       showNotification("Failed to save draft. Check console.");

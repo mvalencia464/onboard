@@ -10,7 +10,7 @@ interface StepEditorProps {
   data: OnboardingData;
   onChange: (data: OnboardingData) => void;
   onComplete: () => void;
-  onSaveDraft: () => void;
+  onSaveDraft: (data?: OnboardingData) => void;
 }
 
 type Tab = 'info' | 'branding' | 'seo' | 'services' | 'portfolio' | 'social' | 'reviews';
@@ -42,6 +42,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
       alert('Failed to upload logo: ' + (error.message || error));
     } else if (url) {
       updateField('logoUrl', url);
+      onSaveDraft({ ...data, logoUrl: url });
     }
   };
 
@@ -71,7 +72,9 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
     }
 
     if (newUrls.length > 0) {
-      updateField('galleryUrls', [...(data.galleryUrls || []), ...newUrls]);
+      const updatedGallery = [...(data.galleryUrls || []), ...newUrls];
+      updateField('galleryUrls', updatedGallery);
+      onSaveDraft({ ...data, galleryUrls: updatedGallery });
     }
     setProjectUploadProgress(null);
   };
