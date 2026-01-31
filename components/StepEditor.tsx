@@ -641,11 +641,18 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                               </div>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed">
-                              {review.text}
+                              {review.text || <span className="text-gray-400 italic">Rating only - no review text provided.</span>}
                             </p>
                             <div className="flex justify-between items-center mt-2">
                               <span className="text-[10px] text-gray-400 uppercase tracking-wide">
-                                {review.date ? (typeof review.date === 'string' && !review.date.includes('-') && !review.date.includes(':') ? review.date : new Date(review.date).toLocaleDateString()) : 'Recent Review'}
+                                {(() => {
+                                  if (!review.date) return 'Recent Review';
+                                  if (typeof review.date === 'string' && review.date.includes('ago')) return review.date;
+                                  const timestamp = Number(review.date);
+                                  if (isNaN(timestamp)) return new Date(review.date).toLocaleDateString();
+                                  const ms = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
+                                  return new Date(ms).toLocaleDateString();
+                                })()}
                               </span>
                               <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${review.source === 'Google' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
                                 {review.source}

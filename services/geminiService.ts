@@ -33,9 +33,17 @@ export const enrichBusinessData = async (placeData: any, allReviews: any[] = [])
   try {
     // Merge Google Reviews with MGR Reviews if available
     const combinedReviews = [
-      ...(placeData.reviews?.map((r: any) => ({ text: r.text, author: r.author_name, rating: r.rating })) || []),
-      ...allReviews.map(r => ({ text: r.body || r.text, author: r.author_name, rating: r.rating }))
-    ];
+      ...(placeData.reviews?.map((r: any) => ({ 
+        text: r.text || '', 
+        author: r.author_name || 'Google User', 
+        rating: r.rating || 5 
+      })) || []),
+      ...allReviews.map(r => ({ 
+        text: r.body || r.text || r.content || r.comment || '', 
+        author: r.author_name || r.name || r.customer_name || 'Verified Customer', 
+        rating: typeof r.rating === 'object' ? r.rating.score : (r.rating || 5)
+      }))
+    ].filter(r => r.text.length > 5); // Only send reviews that actually have content to the AI
 
     // Pre-process Place Data to give the AI a clean prompt
     const placeContext = {

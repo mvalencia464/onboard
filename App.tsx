@@ -72,18 +72,18 @@ export default function App() {
       // Normalize and combine reviews for storage
       const googleReviews = (place.reviews || []).map((r: any) => ({
         source: 'Google',
-        text: r.text,
-        author: r.author_name,
-        rating: r.rating,
+        text: r.text || '',
+        author: r.author_name || 'Google User',
+        rating: r.rating || 5,
         date: r.relative_time_description || r.time // Fallback
       }));
 
       const mgrReviews = allReviews.map(r => ({
         source: 'MoreGoodReviews',
-        text: r.body,
-        author: r.author_name,
-        rating: r.rating,
-        date: r.created_at
+        text: r.body || r.text || r.content || r.comment || '',
+        author: r.author_name || r.name || r.customer_name || 'Verified Customer',
+        rating: typeof r.rating === 'object' ? r.rating.score : (r.rating || 5),
+        date: r.created_at || r.date || Date.now()
       }));
 
       const combinedRawReviews = [...googleReviews, ...mgrReviews];
