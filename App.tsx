@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppStep, INITIAL_DATA, OnboardingData } from './types';
 import { enrichBusinessData } from './services/geminiService';
+import { fetchAllReviews } from './services/moreGoodReviewsService';
 import { saveBusiness, getBusiness, supabase } from './lib/supabase';
 import ScanningStep from './components/ScanningStep';
 import StepEditor from './components/StepEditor';
@@ -60,10 +61,15 @@ export default function App() {
     setError(null);
 
     try {
-      // 2. Send the rich Google Places data to Gemini
-      const result = await enrichBusinessData(place);
+      // 2. Fetch all reviews from MoreGoodReviews
+      console.log("Fetching all reviews from MoreGoodReviews...");
+      const allReviews = await fetchAllReviews();
+      console.log(`Fetched ${allReviews.length} reviews.`);
 
-      // 3. Merge AI result with initial data structure
+      // 3. Send the rich Google Places data + all reviews to Gemini
+      const result = await enrichBusinessData(place, allReviews);
+
+      // 4. Merge AI result with initial data structure
       const mergedData: OnboardingData = {
         ...INITIAL_DATA,
         ...result,

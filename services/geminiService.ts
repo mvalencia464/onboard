@@ -29,8 +29,14 @@ RULES:
    - Extract or generate 3 'Testimonials'. If real reviews are provided in the input, paraphrase them to be punchy. If not, generate realistic placeholders.
 `;
 
-export const enrichBusinessData = async (placeData: any): Promise<Partial<OnboardingData>> => {
+export const enrichBusinessData = async (placeData: any, allReviews: any[] = []): Promise<Partial<OnboardingData>> => {
   try {
+    // Merge Google Reviews with MGR Reviews if available
+    const combinedReviews = [
+      ...(placeData.reviews?.map((r: any) => ({ text: r.text, author: r.author_name, rating: r.rating })) || []),
+      ...allReviews.map(r => ({ text: r.body || r.text, author: r.author_name, rating: r.rating }))
+    ];
+
     // Pre-process Place Data to give the AI a clean prompt
     const placeContext = {
       name: placeData.name,
@@ -38,8 +44,8 @@ export const enrichBusinessData = async (placeData: any): Promise<Partial<Onboar
       phone: placeData.formatted_phone_number,
       website: placeData.website,
       rating: placeData.rating,
-      // Take all available reviews to help AI understand what they actually do
-      reviews: placeData.reviews?.map((r: any) => ({ text: r.text, author: r.author_name, rating: r.rating })) || [],
+      // Use combined reviews (clamped to a reasonable number for token limits if necessary, but 100-200 is usually fine for Flash)
+      reviews: combinedReviews.slice(0, 100),
       // Google types (e.g., ['general_contractor', 'point_of_interest'])
       types: placeData.types || [],
       operating_hours: placeData.opening_hours?.weekday_text || []

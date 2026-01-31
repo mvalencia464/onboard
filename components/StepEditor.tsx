@@ -48,10 +48,10 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
 
   const handleProjectUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     const files = Array.from(e.target.files);
     setProjectUploadProgress({ total: files.length, current: 0 });
-    
+
     const newUrls: string[] = [];
     let completed = 0;
 
@@ -93,11 +93,11 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
           const response = await fetch(url);
           if (!response.ok) throw new Error(`Failed to fetch ${url}`);
           const blob = await response.blob();
-          
+
           // Try to guess extension from blob or url
           let ext = url.split('.').pop()?.split('?')[0] || 'jpg';
           if (ext.length > 4) ext = 'jpg'; // Fallback for weird urls
-          
+
           folder?.file(`image-${index + 1}.${ext}`, blob);
         } catch (err) {
           console.error("Error zipping file:", url, err);
@@ -407,7 +407,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
           {activeTab === 'portfolio' && (
             <div className="space-y-6 animate-fadeIn">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Portfolio Projects</h2>
-              
+
               <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -422,7 +422,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                   <div className="text-right">
                     <span className="text-2xl font-bold text-gray-900">{data.galleryUrls?.length || 0}</span>
                     <span className="text-xs text-gray-500 block uppercase font-bold tracking-wider">Uploaded</span>
-                    
+
                     {data.galleryUrls && data.galleryUrls.length > 0 && (
                       <button
                         onClick={handleDownloadAll}
@@ -461,12 +461,12 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                         </>
                       )}
                     </div>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      multiple 
-                      accept="image/*" 
-                      onChange={handleProjectUpload} 
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept="image/*"
+                      onChange={handleProjectUpload}
                       disabled={!!projectUploadProgress}
                     />
                   </label>
@@ -563,7 +563,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
           {activeTab === 'reviews' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Reviews & Testimonials</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Reviews & Social Proof</h2>
                 <div className="flex gap-2">
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.businessName + " " + data.address)}`}
@@ -572,43 +572,51 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                     className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors"
                   >
                     <Globe className="w-4 h-4" />
-                    View All on Google Maps
+                    View on Google Maps
                   </a>
-
                 </div>
               </div>
 
-              <div className="mt-8">
-                <h3 className="font-semibold text-lg mb-4">Managed Testimonials</h3>
-                <div className="grid gap-4">
-                  {data.testimonials.map((testi, i) => (
-                    <div key={i} className="bg-white p-4 rounded-lg border border-gray-200 relative group">
+              {/* Stats Bar */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Found</div>
+                  <div className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    {data.testimonials?.length || 0} <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">Sourced from All Google Reviews</div>
+                </div>
+              </div>
 
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="text-xs font-bold text-gray-400 uppercase">Quote</label>
-                          <div className="w-full p-2 text-sm italic text-gray-600">
-                            {testi.quote}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                    AI-Selected Testimonials
+                  </h3>
+                  <div className="grid gap-4">
+                    {data.testimonials.map((testi, i) => (
+                      <div key={i} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative group hover:border-brand-orange/30 transition-colors">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-1 mb-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                            ))}
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase">Author</label>
-                            <div className="w-full p-2 text-xs font-bold text-gray-900">
-                              {testi.author}
+                          <p className="text-gray-700 italic border-l-2 border-brand-orange/20 pl-4 py-1">
+                            "{testi.quote}"
+                          </p>
+                          <div className="flex justify-between items-end pt-2 border-t border-gray-50">
+                            <div>
+                              <div className="text-sm font-bold text-gray-900">{testi.author}</div>
+                              <div className="text-xs text-gray-500">{testi.location}</div>
                             </div>
-                          </div>
-                          <div>
-                            <label className="text-xs font-bold text-gray-400 uppercase">Location/Context</label>
-                            <div className="w-full p-2 text-xs text-gray-500">
-                              {testi.location}
-                            </div>
+                            <span className="text-[10px] bg-gray-100 text-gray-400 px-2 py-1 rounded uppercase font-bold tracking-tighter">Verified Review</span>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
