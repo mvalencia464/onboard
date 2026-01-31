@@ -32,6 +32,14 @@ export interface Testimonial {
   location: string;
 }
 
+export interface RawReview {
+  source: string;
+  text: string;
+  author: string;
+  rating: number;
+  date: string | number;
+}
+
 export interface OnboardingData {
   // Database Fields
   id?: number;
@@ -80,7 +88,7 @@ export interface OnboardingData {
 
   // Social Proof
   testimonials: Testimonial[];
-  rawReviews: any[]; // Added for persistent storage of all fetched reviews
+  rawReviews: RawReview[]; // Added for persistent storage of all fetched reviews
 
   // Section 8: Process
   processSteps: string[];

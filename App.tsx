@@ -69,11 +69,31 @@ export default function App() {
       // 3. Send the rich Google Places data + all reviews to Gemini
       const result = await enrichBusinessData(place, allReviews);
 
+      // Normalize and combine reviews for storage
+      const googleReviews = (place.reviews || []).map((r: any) => ({
+        source: 'Google',
+        text: r.text,
+        author: r.author_name,
+        rating: r.rating,
+        date: r.relative_time_description || r.time // Fallback
+      }));
+
+      const mgrReviews = allReviews.map(r => ({
+        source: 'MoreGoodReviews',
+        text: r.body,
+        author: r.author_name,
+        rating: r.rating,
+        date: r.created_at
+      }));
+
+      const combinedRawReviews = [...googleReviews, ...mgrReviews];
+
       // 4. Merge AI result with initial data structure
       const mergedData: OnboardingData = {
         ...INITIAL_DATA,
         ...result,
         googlePlaceId: place.place_id,
+        rawReviews: combinedRawReviews, // Store ALL reviews
         // Ensure deeply nested objects merge safely
         socials: { ...INITIAL_DATA.socials, ...(result.socials || {}) },
         categories: result.categories || [],

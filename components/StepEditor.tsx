@@ -630,7 +630,7 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                         {data.rawReviews.map((review, i) => (
                           <div key={i} className="p-4 hover:bg-white transition-colors">
                             <div className="flex justify-between items-start mb-2">
-                              <div className="font-bold text-sm text-gray-900">{review.author_name}</div>
+                              <div className="font-bold text-sm text-gray-900">{review.author}</div>
                               <div className="flex gap-0.5">
                                 {[...Array(5)].map((_, starIdx) => (
                                   <Star
@@ -641,10 +641,15 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                               </div>
                             </div>
                             <p className="text-sm text-gray-600 leading-relaxed">
-                              {review.body || review.text}
+                              {review.text}
                             </p>
-                            <div className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
-                              {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'Recent Review'}
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-[10px] text-gray-400 uppercase tracking-wide">
+                                {review.date ? (typeof review.date === 'string' && !review.date.includes('-') && !review.date.includes(':') ? review.date : new Date(review.date).toLocaleDateString()) : 'Recent Review'}
+                              </span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${review.source === 'Google' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                                {review.source}
+                              </span>
                             </div>
                           </div>
                         ))}
