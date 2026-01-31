@@ -34,14 +34,12 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
-      console.log("Initial session check:", session, "Error:", error);
       setSession(session);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state change:", _event, session);
       setSession(session);
     });
 
@@ -62,9 +60,7 @@ export default function App() {
 
     try {
       // 2. Fetch all reviews from MoreGoodReviews
-      console.log("Fetching all reviews from MoreGoodReviews...");
       const allReviews = await fetchAllReviews();
-      console.log(`Fetched ${allReviews.length} reviews.`);
 
       // 3. Send the rich Google Places data + all reviews to Gemini
       const result = await enrichBusinessData(place, allReviews);
