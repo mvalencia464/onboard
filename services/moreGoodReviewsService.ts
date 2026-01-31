@@ -1,10 +1,17 @@
 export interface MGRReview {
     id: string;
-    body: string;
-    author_name: string;
-    rating: number;
+    review: string; // The actual review text
+    body?: string; // Fallback
+    text?: string; // Fallback
+    content?: string; // Fallback
+    reviewer?: {
+        name: string;
+    };
+    author_name?: string; // Fallback
+    name?: string; // Fallback
+    rating: number | { score: number };
     reviewer_location?: string;
-    created_at: string;
+    created_at: string | number;
 }
 
 interface MGRPagination {
