@@ -580,11 +580,11 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
               {/* Stats Bar */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 <div className="bg-white p-4 border border-gray-200 rounded-xl shadow-sm">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Found</div>
+                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Reviews</div>
                   <div className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    {data.testimonials?.length || 0} <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                    {data.rawReviews?.length || 0} <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">Sourced from All Google Reviews</div>
+                  <div className="text-xs text-gray-500 mt-1">Found via MoreGoodReviews & Google</div>
                 </div>
               </div>
 
@@ -618,6 +618,43 @@ const StepEditor: React.FC<StepEditorProps> = ({ data, onChange, onComplete, onS
                     ))}
                   </div>
                 </div>
+
+                {data.rawReviews && data.rawReviews.length > 0 && (
+                  <div className="pt-6 border-t border-gray-100">
+                    <h3 className="font-semibold text-lg mb-4 flex items-center gap-2 text-gray-700">
+                      <MessageSquare className="w-5 h-5 text-gray-400" />
+                      Raw Review Buffer ({data.rawReviews.length})
+                    </h3>
+                    <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                      <div className="max-h-[400px] overflow-y-auto divide-y divide-gray-200">
+                        {data.rawReviews.map((review, i) => (
+                          <div key={i} className="p-4 hover:bg-white transition-colors">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="font-bold text-sm text-gray-900">{review.author_name}</div>
+                              <div className="flex gap-0.5">
+                                {[...Array(5)].map((_, starIdx) => (
+                                  <Star
+                                    key={starIdx}
+                                    className={`w-3 h-3 ${starIdx < review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600 leading-relaxed">
+                              {review.body || review.text}
+                            </p>
+                            <div className="text-[10px] text-gray-400 mt-2 uppercase tracking-wide">
+                              {review.created_at ? new Date(review.created_at).toLocaleDateString() : 'Recent Review'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3 italic">
+                      All reviews above were fetched and used by Gemini to generate your business profile.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

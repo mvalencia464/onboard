@@ -53,14 +53,14 @@ export interface OnboardingData {
   websiteUrl: string;
   discounts: string; // Added: Discounts for future maintenance
   highlights: string; // Added: Special highlights/Business features
-  
+
   // Section 2: Branding
   brandColor: string;
   fontPreference: 'Modern' | 'Classic' | 'Handwritten';
   logoUrl: string | null; // Placeholder logic
   needsLogo: boolean; // Added: Do you need us to make a logo?
   aboutUs: string;
-  
+
   // Section 3: Localization & SEO
   primaryCity: string;
   neighborhoods: string[]; // List of strings
@@ -78,8 +78,9 @@ export interface OnboardingData {
   projects: Project[];
   galleryUrls: string[]; // Added: Bulk photo storage
 
-  // Section 7: Social Proof
+  // Social Proof
   testimonials: Testimonial[];
+  rawReviews: any[]; // Added for persistent storage of all fetched reviews
 
   // Section 8: Process
   processSteps: string[];
@@ -130,6 +131,7 @@ export const INITIAL_DATA: OnboardingData = {
   projects: [],
   galleryUrls: [],
   testimonials: [],
+  rawReviews: [],
   processSteps: ['Consult & Design', 'Precision Build', 'Lifetime Enjoyment'],
   termsAccepted: false,
   socials: {
