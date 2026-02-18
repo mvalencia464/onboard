@@ -63,16 +63,24 @@ export default function App() {
       let targetReviews = [];
       const customers = await fetchCustomers();
 
-      // Match business by name (case-insensitive, basic normalization)
-      const matchedCustomer = customers.find(c =>
-        c.business_name.toLowerCase().trim() === place.name.toLowerCase().trim()
-      );
+      console.log('Available MGR Customers:', customers.map(c => c.business_name));
+
+      const normalize = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+      const normalizedPlaceName = normalize(place.name);
+
+      // Match business by name (fuzzy normalization: remove all non-alphanumeric and spaces)
+      const matchedCustomer = customers.find(c => {
+        const normalizedMGRName = normalize(c.business_name);
+        return normalizedMGRName === normalizedPlaceName ||
+          normalizedMGRName.includes(normalizedPlaceName) ||
+          normalizedPlaceName.includes(normalizedMGRName);
+      });
 
       if (matchedCustomer) {
         console.log(`Matched customer: ${matchedCustomer.business_name} (${matchedCustomer.id})`);
         targetReviews = await fetchReviewsForCustomer(matchedCustomer.id);
       } else {
-        console.warn(`No exact match found for "${place.name}" in MGR customers. Falling back to empty.`);
+        console.warn(`No match found for "${place.name}" in MGR customers. Normalized as "${normalizedPlaceName}".`);
         targetReviews = [];
       }
 
