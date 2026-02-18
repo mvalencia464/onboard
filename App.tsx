@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppStep, INITIAL_DATA, OnboardingData } from './types';
 import { enrichBusinessData } from './services/geminiService';
-import { fetchAllReviews } from './services/moreGoodReviewsService';
+import { fetchCustomers, fetchReviewsForCustomer, fetchAllReviews } from './services/moreGoodReviewsService';
 import { saveBusiness, getBusiness, supabase } from './lib/supabase';
 import ScanningStep from './components/ScanningStep';
 import StepEditor from './components/StepEditor';
@@ -59,11 +59,25 @@ export default function App() {
     setError(null);
 
     try {
-      // 2. Fetch all reviews from MoreGoodReviews
-      const allReviews = await fetchAllReviews();
+      // 2. Resolve specific reviews from MoreGoodReviews
+      let targetReviews = [];
+      const customers = await fetchCustomers();
 
-      // 3. Send the rich Google Places data + all reviews to Gemini
-      const result = await enrichBusinessData(place, allReviews);
+      // Match business by name (case-insensitive, basic normalization)
+      const matchedCustomer = customers.find(c =>
+        c.business_name.toLowerCase().trim() === place.name.toLowerCase().trim()
+      );
+
+      if (matchedCustomer) {
+        console.log(`Matched customer: ${matchedCustomer.business_name} (${matchedCustomer.id})`);
+        targetReviews = await fetchReviewsForCustomer(matchedCustomer.id);
+      } else {
+        console.warn(`No exact match found for "${place.name}" in MGR customers. Falling back to empty.`);
+        targetReviews = [];
+      }
+
+      // 3. Send the rich Google Places data + matched reviews to Gemini
+      const result = await enrichBusinessData(place, targetReviews);
 
       // Normalize and combine reviews for storage
       const googleReviews = (place.reviews || []).map((r: any) => ({
@@ -74,7 +88,7 @@ export default function App() {
         date: r.relative_time_description || r.time // Fallback
       }));
 
-      const mgrReviews = allReviews.map(r => ({
+      const mgrReviews = targetReviews.map(r => ({
         source: 'MoreGoodReviews',
         text: r.review || r.body || r.text || r.content || '',
         author: r.reviewer?.name || r.author_name || r.name || 'Verified Customer',
@@ -89,7 +103,7 @@ export default function App() {
         ...INITIAL_DATA,
         ...result,
         googlePlaceId: place.place_id,
-        rawReviews: combinedRawReviews, // Store ALL reviews
+        rawReviews: combinedRawReviews, // Store ONLY relevant reviews
         // Ensure deeply nested objects merge safely
         socials: { ...INITIAL_DATA.socials, ...(result.socials || {}) },
         categories: result.categories || [],
@@ -168,8 +182,6 @@ export default function App() {
     }
 
     // Load raw data back into state
-    // We assume raw_data matches OnboardingData structure. 
-    // We also ensure the ID is preserved in the state.
     const loadedData: OnboardingData = {
       ...(businessData.raw_data as OnboardingData),
       id: businessData.id // Ensure the database ID is set on the object
@@ -179,6 +191,7 @@ export default function App() {
     setBusinessName(loadedData.businessName);
     setStep(AppStep.EDITOR);
   };
+
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
