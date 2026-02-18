@@ -93,23 +93,24 @@ export async function fetchReviewsForCustomer(customerId: string): Promise<MGRRe
                 throw new Error(`Failed to fetch reviews: ${response.statusText}`);
             }
 
-            const result: MGRResponse = await response.json();
-            console.log(`Page ${currentPage} result:`, {
-                dataLength: result.data?.length,
-                pagination: result.pagination
-            });
+            const result: any = await response.json();
+            console.log(`Page ${currentPage} response:`, result);
 
-            if (!result.data || !Array.isArray(result.data)) {
+            const pageData = result.data || result.reviews || [];
+            if (!Array.isArray(pageData)) {
                 console.warn('Result data is missing or not an array:', result);
                 break;
             }
 
-            allReviews = [...allReviews, ...result.data];
+            allReviews = [...allReviews, ...pageData];
 
-            if (result.pagination) {
-                lastPage = result.pagination.last_page;
+            // Robust pagination check
+            const pagination = result.pagination || result.meta;
+            if (pagination) {
+                lastPage = pagination.last_page || pagination.total_pages || pagination.totalPages || 1;
             } else {
-                console.warn('Pagination data is missing, stopping at page 1');
+                // If no pagination object, check if we might have more based on data length (common in some APIs)
+                // But usually APIs provide a meta object.
                 lastPage = 1;
             }
 

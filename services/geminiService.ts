@@ -33,31 +33,20 @@ RULES:
 
 export const enrichBusinessData = async (placeData: any, allReviews: any[] = []): Promise<Partial<OnboardingData>> => {
   try {
-    // Filter MGR reviews to only include those that likely belong to THIS business
-    // We check for the business name in the review text or any business identifiers
-    const filteredMGRReviews = allReviews.filter(r => {
-      const reviewText = (r.review || r.body || r.text || r.content || '').toLowerCase();
-      const nameParts = placeData.name.toLowerCase().split(' ').filter((p: string) => p.length > 3);
-      // If the review mentions major parts of the business name, or if we have no other reviews,
-      // we might keep it, but for safety with multiple clients in one account, 
-      // we should be strict or rely on a property if MGR provides it.
-      // Since MGR API doesn't seem to have a business_id in this context, we use a heuristic.
-      return nameParts.some((part: string) => reviewText.includes(part));
-    });
-
-    // Merge Google Reviews with filtered MGR Reviews
+    // Merge Google Reviews with MGR Reviews
     const combinedReviews = [
       ...(placeData.reviews?.map((r: any) => ({
         text: r.text || '',
         author: r.author_name || 'Google User',
         rating: r.rating || 5
       })) || []),
-      ...filteredMGRReviews.map(r => ({
+      ...allReviews.map(r => ({
         text: r.review || r.body || r.text || r.content || '',
         author: r.reviewer?.name || r.author_name || r.name || 'Verified Customer',
         rating: typeof r.rating === 'object' ? r.rating.score : (r.rating || 5)
       }))
     ].filter(r => r.text.length > 5);
+
 
     // Pre-process Place Data to give the AI a clean prompt
     const placeContext = {
