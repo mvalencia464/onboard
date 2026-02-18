@@ -80,6 +80,7 @@ export async function fetchReviewsForCustomer(customerId: string): Promise<MGRRe
 
     try {
         do {
+            console.log(`Fetching reviews for customer ${customerId}, page ${currentPage}...`);
             const response = await fetch(`${BASE_URL}?page=${currentPage}`, {
                 headers: {
                     'Authorization': `Bearer ${API_KEY}`,
@@ -93,9 +94,25 @@ export async function fetchReviewsForCustomer(customerId: string): Promise<MGRRe
             }
 
             const result: MGRResponse = await response.json();
+            console.log(`Page ${currentPage} result:`, {
+                dataLength: result.data?.length,
+                pagination: result.pagination
+            });
+
+            if (!result.data || !Array.isArray(result.data)) {
+                console.warn('Result data is missing or not an array:', result);
+                break;
+            }
+
             allReviews = [...allReviews, ...result.data];
 
-            lastPage = result.pagination.last_page;
+            if (result.pagination) {
+                lastPage = result.pagination.last_page;
+            } else {
+                console.warn('Pagination data is missing, stopping at page 1');
+                lastPage = 1;
+            }
+
             currentPage++;
 
         } while (currentPage <= lastPage);
